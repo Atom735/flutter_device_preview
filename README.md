@@ -60,3 +60,7 @@ See [`device_preview/README.md`](device_preview/README.md) for the full package 
 | [`device_specs`](device_specs) | The device catalog: one JSON per device — metrics, screen outline and body artwork. Generated into the extension; see [its README](device_specs/README.md) to add a device. |
 | [`device_frame`](device_frame) | **Legacy** device frame drawings package from the 2.x era. Nothing in the 3.0 release depends on it — 3.0 renders frames from the [`device_specs`](device_specs) artwork pushed over the DevTools protocol. |
 | [`docs`](docs) | The website, including its interactive demo — `docs/demo` is the counter example built for the web, `docs/device_catalog.json` the catalog its HTML panel pushes to it. Rebuild both with [`tool/build_demo.sh`](tool/build_demo.sh). |
+
+## Atom735
+
+Compat branch for Flutter 3.16: `compat/flutter-3.16` (see `device_frame/COMPAT.md`).
