@@ -51,6 +51,7 @@ class VirtualKeyboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
+    final bottomInset = mediaQuery.padding.bottom;
     return Stack(
       children: <Widget>[
         Positioned.fill(
@@ -66,14 +67,27 @@ class VirtualKeyboard extends StatelessWidget {
           left: -1,
           right: -1,
           child: AnimatedCrossFade(
-            firstChild: const SizedBox(),
-            secondChild: const _VirtualKeyboard(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: _VirtualKeyboard(
               height: _VirtualKeyboard.minHeight,
+              bottomInset: bottomInset,
             ),
             crossFadeState: isEnabled
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             duration: transitionDuration,
+            sizeCurve: Curves.easeOutCubic,
+            layoutBuilder:
+                (topChild, topKey, bottomChild, bottomKey) {
+              return Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.bottomCenter,
+                children: <Widget>[
+                  KeyedSubtree(key: bottomKey, child: bottomChild),
+                  KeyedSubtree(key: topKey, child: topChild),
+                ],
+              );
+            },
           ),
         ),
       ],
@@ -84,11 +98,15 @@ class VirtualKeyboard extends StatelessWidget {
 class _VirtualKeyboard extends StatelessWidget {
   const _VirtualKeyboard({
     double? height,
+    this.bottomInset = 0,
   }) : height = height ?? minHeight;
 
+  /// Height of the key rows area (excluding home-indicator inset).
   static const double minHeight = 214;
+  static const double spacing = 8;
+
   final double height;
-  static const double spacing = 22;
+  final double bottomInset;
 
   Widget _row(List<Widget> children) {
     return Padding(
@@ -116,6 +134,10 @@ class _VirtualKeyboard extends StatelessWidget {
               ),
               child: VirtualKeyboardButton(
                 backgroundColor: backgroundColor,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 4,
+                ),
                 child: Text(
                   x,
                   style: TextStyle(
@@ -134,127 +156,154 @@ class _VirtualKeyboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = DeviceFrameTheme.of(context).keyboardStyle;
     final mediaQuery = MediaQuery.of(context);
-    return Container(
-      height: height + mediaQuery.padding.bottom,
-      padding: EdgeInsets.only(
-        left: mediaQuery.padding.left + 1,
-        right: mediaQuery.padding.right + 1,
-      ),
+    final inset = bottomInset > 0 ? bottomInset : mediaQuery.padding.bottom;
+    return Material(
       color: theme.backgroundColor,
-      child: Column(
-        children: <Widget>[
-          _row(
-            _letters(
-              ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-              theme.button1BackgroundColor,
-              theme.button1ForegroundColor,
-            ),
+      child: SizedBox(
+        height: height + inset,
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: mediaQuery.padding.left + 1,
+            right: mediaQuery.padding.right + 1,
+            bottom: inset,
           ),
-          _row(
-            _letters(
-              ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-              theme.button1BackgroundColor,
-              theme.button1ForegroundColor,
-            ),
-          ),
-          _row([
-            Padding(
-              padding: const EdgeInsets.only(
-                right: 12,
-              ),
-              child: VirtualKeyboardButton(
-                child: Icon(
-                  Icons.keyboard_capslock,
-                  color: theme.button2ForegroundColor,
-                  size: 16,
-                ),
-                backgroundColor: theme.button2BackgroundColor,
-              ),
-            ),
-            ..._letters(
-              ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
-              theme.button1BackgroundColor,
-              theme.button1ForegroundColor,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(
-                right: spacing,
-              ),
-              child: VirtualKeyboardButton(
-                child: Icon(
-                  Icons.backspace,
-                  color: theme.button2ForegroundColor,
-                  size: 16,
-                ),
-                backgroundColor: theme.button2BackgroundColor,
-              ),
-            ),
-          ]),
-          _row(
-            [
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: spacing,
-                ),
-                child: VirtualKeyboardButton(
-                  child: Text(
-                    '123',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: theme.button2ForegroundColor,
-                    ),
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: _row(
+                  _letters(
+                    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                    theme.button1BackgroundColor,
+                    theme.button1ForegroundColor,
                   ),
-                  backgroundColor: theme.button2BackgroundColor,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: spacing,
-                ),
-                child: VirtualKeyboardButton(
-                  child: Icon(
-                    Icons.insert_emoticon,
-                    color: theme.button2ForegroundColor,
-                    size: 16,
-                  ),
-                  backgroundColor: theme.button2BackgroundColor,
                 ),
               ),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    right: spacing,
-                  ),
-                  child: VirtualKeyboardButton(
-                    child: Text(
-                      'space',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: theme.button2ForegroundColor,
-                      ),
-                    ),
-                    backgroundColor: theme.button2BackgroundColor,
+                child: _row(
+                  _letters(
+                    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+                    theme.button1BackgroundColor,
+                    theme.button1ForegroundColor,
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: spacing,
-                ),
-                child: VirtualKeyboardButton(
-                  child: Text(
-                    'return',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: theme.button2ForegroundColor,
+              Expanded(
+                child: _row([
+                  Padding(
+                    padding: const EdgeInsets.only(right: spacing),
+                    child: VirtualKeyboardButton(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 6,
+                      ),
+                      backgroundColor: theme.button2BackgroundColor,
+                      child: Icon(
+                        Icons.keyboard_capslock,
+                        color: theme.button2ForegroundColor,
+                        size: 16,
+                      ),
                     ),
                   ),
-                  backgroundColor: theme.button2BackgroundColor,
+                  ..._letters(
+                    ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+                    theme.button1BackgroundColor,
+                    theme.button1ForegroundColor,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: spacing),
+                    child: VirtualKeyboardButton(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 6,
+                      ),
+                      backgroundColor: theme.button2BackgroundColor,
+                      child: Icon(
+                        Icons.backspace,
+                        color: theme.button2ForegroundColor,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ]),
+              ),
+              Expanded(
+                child: _row(
+                  [
+                    Padding(
+                      padding: const EdgeInsets.only(right: spacing),
+                      child: VirtualKeyboardButton(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
+                        backgroundColor: theme.button2BackgroundColor,
+                        child: Text(
+                          '123',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: theme.button2ForegroundColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: spacing),
+                      child: VirtualKeyboardButton(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
+                        backgroundColor: theme.button2BackgroundColor,
+                        child: Icon(
+                          Icons.insert_emoticon,
+                          color: theme.button2ForegroundColor,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: spacing),
+                        child: VirtualKeyboardButton(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 6,
+                          ),
+                          backgroundColor: theme.button2BackgroundColor,
+                          child: Text(
+                            'space',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: theme.button2ForegroundColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: spacing),
+                      child: VirtualKeyboardButton(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
+                        backgroundColor: theme.button2BackgroundColor,
+                        child: Text(
+                          'return',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: theme.button2ForegroundColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
